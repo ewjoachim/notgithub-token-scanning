@@ -78,18 +78,24 @@
         <div class="field">
           <label class="label">Payload</label>
           <div class="control">
-            <textarea id="payload" name="payload" class="textarea {% if 'payload' in errors %}is-danger{% endif %}" placeholder="[{&quot;type&quot;: &quot;token&quot;, &quot;token&quot;: token, &quot;url&quot;: &quot;https://example.com&quot;}]">[{"type": "token", "token": "some-token", "url": "https://example.com"}]</textarea>
+            <textarea id="payload" name="payload" class="textarea {% if payload.error %}is-danger{% endif %}" placeholder="[{&quot;type&quot;: &quot;token&quot;, &quot;token&quot;: token, &quot;url&quot;: &quot;https://example.com&quot;}]">{{ payload.value }}</textarea>
           </div>
           <p class="help">Token disclosure payload (JSON)</p>
+          {% if payload.error %}
+            <p class="help is-danger">{{ payload.error }}</p>
+          {% endif %}
 
         </div>
 
         <div class="field">
           <label class="label">URL</label>
           <div class="control">
-            <input class="input {% if 'url' in errors %}is-danger{% endif %}" name="url" type="text" placeholder="{{ default_url }}" value="{{ default_url }}">
+            <input class="input {% if 'url' in errors %}is-danger{% endif %}" name="url" type="text" placeholder="http://somewhere:8080/github" value="{{ url.value }}">
           </div>
           <p class="help">URL to call for the token disclosure</p>
+          {% if url.error %}
+            <p class="help is-danger">{{ url.error }}</p>
+          {% endif %}
         </div>
 
         <button class="button is-large is-primary">Report tokens</button>
