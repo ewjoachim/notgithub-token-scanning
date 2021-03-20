@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>NotGitHub Token Scanning</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.1/css/bulma.min.css">
+<script src="https://kit.fontawesome.com/33cb266255.js" crossorigin="anonymous"></script>
+  </head>
+  <body>
+  <section class="hero is-primary">
+    <div class="hero-body">
+      <p class="title">
+        NotGitHub Token Scanning
+      </p>
+      <p class="subtitle">
+        Simulate GitHub Token Scanning features for integration purposes
+      </p>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container is-max-desktop">
+      <h1 class="title">
+        Keys
+      </h1>
+      <table class="table table-hover mb-2">
+        <thead>
+          <tr>
+            <th>#</th>
+            <th class="col-auto">id</th>
+            <th>current</th>
+            <th>action</th>
+          </tr>
+        </thead>
+        <tbody>
+          {% for key in keys %}
+            <tr class="{% if key.is_current %}is-selected{% endif %}">
+              <td>{{ loop.index }}</td>
+              <td><small>{{ key.id }}<small></td>
+              <td>
+                {% if key.is_current %}
+                  <strong>yes</strong>
+                {% else %}
+                  no
+                {% endif %}
+              </td>
+              <td>
+                <form method="post" action="/edit-key/{{ loop.index0 }}">
+                {% if not loop.first %}
+                  <button type="submit" name="action" value="up" class="button"><i class="fas fa-arrow-up"></i></button>
+                {% endif %}
+                {% if not loop.last %}
+                  <button type="submit" name="action" value="down" class="button"><i class="fas fa-arrow-down"></i></button>
+                {% endif %}
+                <button type="submit" name="action" value="delete" class="button"><i class="fas fa-trash"></i></button>
+                {% if not key.is_current %}
+                  <button type="submit" name="action" value="current" class="button"><i class="fas fa-check-square"></i></button>
+                {% endif %}
+                </form>
+              </td>
+            </tr>
+          {% endfor %}
+        </tbody>
+      </table>
+      <form method="post" action="/add-key">
+        <button class="button is-primary">Add key</button>
+      </form>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="container is-max-desktop">
+      <h1 class="title">
+        Token disclosure report
+      </h1>
+      <form method="post" action="/disclose">
+        <div class="field">
+          <label class="label">Payload</label>
+          <div class="control">
+            <textarea id="payload" name="payload" class="textarea {% if 'payload' in errors %}is-danger{% endif %}" placeholder="[{&quot;type&quot;: &quot;token&quot;, &quot;token&quot;: token, &quot;url&quot;: &quot;https://example.com&quot;}]">[{"type": "token", "token": "some-token", "url": "https://example.com"}]</textarea>
+          </div>
+          <p class="help">Token disclosure payload (JSON)</p>
+
+        </div>
+
+        <div class="field">
+          <label class="label">URL</label>
+          <div class="control">
+            <input class="input {% if 'url' in errors %}is-danger{% endif %}" name="url" type="text" placeholder="{{ default_url }}" value="{{ default_url }}">
+          </div>
+          <p class="help">URL to call for the token disclosure</p>
+        </div>
+
+        <button class="button is-large is-primary">Report tokens</button>
+      </form>
+
+    </div>
+  </section>
+
+  {% if response %}
+  <section class="section">
+    <div class="container is-max-desktop">
+      <h1 class="title">
+        Response
+      </h1>
+      <h3>Status code</h3>
+      <pre>{{ response.status_code }}</pre>
+
+      <h3>Response</h3>
+      <pre>{{ response.text }}</pre>
+
+    </div>
+  </section>
+  {% endif %}
+
+  </body>
+</html>
