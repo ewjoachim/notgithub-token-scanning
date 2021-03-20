@@ -1,6 +1,8 @@
 # NotGitHub Token Scanning
 
-This project defines a simple Python service that replaces "GitHub" when integrating
+Disclaimer: I'm not affiliated with GitHub in any way.
+
+This project defines a simple Python service that replaces GitHub when integrating
 the [Secrets Scanning](https://docs.github.com/en/developers/overview/secret-scanning)
 feature from GitHub
 
