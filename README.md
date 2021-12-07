@@ -2,9 +2,11 @@
 
 Disclaimer: I'm not affiliated with GitHub in any way.
 
-This is a simple Python server that mocks GitHub responses in integration tests for
- [GitHub Secret Scanning](https://docs.github.com/en/developers/overview/secret-scanning).
-It doesn't do any actual scanning itself. 
+This project defines a simple Python service that replaces GitHub when integrating
+the [Secrets Scanning](https://docs.github.com/en/developers/overview/secret-scanning)
+feature from GitHub from the point of view of the integrating app: it does no scanning
+at all but it lets you simulate realistic payloads that GitHub would be sending to
+your service if it found some tokens.
 
 
 ![NotGitHub Token Scanning screenshot](screenshot.png)
@@ -39,4 +41,3 @@ the current key will be the one used for signing the payload.
 
 Enter your payload and the URL to call. Default url can be configured with the
 `NOTGITHUB_DEFAULT_URL` environment variable.
-
