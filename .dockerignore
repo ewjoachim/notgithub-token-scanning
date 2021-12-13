@@ -1,0 +1,5 @@
+*
+!scripts/
+!templates/
+!main.py
+!requirements.txt
