@@ -9,25 +9,42 @@ at all but it lets you simulate realistic payloads that GitHub would be sending 
 your service if it found some tokens.
 
 
-![NotGitHub Token Scanning screenshot](screenshot.png)
+The interface follows your system's light or dark preference:
+
+| Light | Dark |
+| --- | --- |
+| ![NotGitHub Token Scanning, light theme](screenshot-light.png) | ![NotGitHub Token Scanning, dark theme](screenshot-dark.png) |
 
 ## How to
 
 ### Run using docker
+
+`latest` docker label follows the `main` branch, we frequently rebuild to get the latest versions of dependencies. To pin a digest, find the
+current digest value on the
+[image's tag list](https://github.com/ewjoachim/notgithub-token-scanning/pkgs/container/notgithub-token-scanning).
+
 Docker without compose:
 ```console
 $ docker run \
     --rm -p 8000:8000 -e "NOTGITHUB_DEFAULT_URL=http://other/_/github/disclose" \
-    ewjoachim/notgithub-token-scanning
+    ghcr.io/ewjoachim/notgithub-token-scanning:latest@sha256:<digest>
 ```
 
 Docker compose:
 ```yml
 notgithub:
-  image: ewjoachim/notgithub-token-scanning
+  image: ghcr.io/ewjoachim/notgithub-token-scanning:latest@sha256:<digest>
   environment:
     NOTGITHUB_DEFAULT_URL: "http://your-service/your/disclose/url"
 ```
+
+Tagged releases (`v1`, `v2`, ...) are published as image tags of the same name,
+if you'd rather pin a fixed version (you won't get updated dependencies though)
+
+The same image is also pushed to Docker Hub as
+`ewjoachim/notgithub-token-scanning`
+([tag list](https://hub.docker.com/r/ewjoachim/notgithub-token-scanning/tags)),
+if you'd rather pull from there.
 
 ### Build & run without docker
 
