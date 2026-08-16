@@ -1,5 +1,0 @@
-#!/bin/bash
-
-set -eu
-
-exec docker build . -t ewjoachim/notgithub-token-scanning
