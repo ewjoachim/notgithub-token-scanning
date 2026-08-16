@@ -1,124 +1,334 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
   <head>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>NotGitHub Token Scanning</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css">
-<script src="https://kit.fontawesome.com/33cb266255.js" crossorigin="anonymous"></script>
+    <style>
+      :root {
+        color-scheme: light dark;
+        --bg: #fdfdfc;
+        --surface: #f4f4f2;
+        --text: #1b1c1d;
+        --muted: #6b7076;
+        --border: #e3e3e0;
+        --accent: #0f766e;
+        --accent-soft: #e6f4f1;
+        --accent-text: #ffffff;
+        --danger: #b42318;
+        --radius: 6px;
+        --mono: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+      }
+
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --bg: #17191b;
+          --surface: #1f2225;
+          --text: #e6e7e8;
+          --muted: #99a0a7;
+          --border: #2e3236;
+          --accent: #4fd1c5;
+          --accent-soft: #1a2c2a;
+          --accent-text: #10201e;
+          --danger: #ff7b72;
+        }
+      }
+
+      * { box-sizing: border-box; }
+
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+        font: 1rem/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+      }
+
+      .container {
+        width: 100%;
+        max-width: 52rem;
+        margin: 0 auto;
+        padding: 0 1.5rem;
+      }
+
+      header {
+        background: var(--surface);
+        border-bottom: 1px solid var(--border);
+        padding: 2.25rem 0;
+      }
+
+      header h1 {
+        margin: 0;
+        font-size: 1.6rem;
+        letter-spacing: -0.01em;
+      }
+
+      header p {
+        margin: 0.35rem 0 0;
+        color: var(--muted);
+      }
+
+      main section { padding: 2.5rem 0; }
+      main section + section { border-top: 1px solid var(--border); }
+
+      h2 {
+        margin: 0 0 1.25rem;
+        font-size: 1.2rem;
+      }
+
+      h3 {
+        margin: 0 0 0.4rem;
+        font-size: 0.75rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--muted);
+      }
+
+      /* Long key ids and wide response bodies scroll on their own rather than
+         making the page scroll sideways. */
+      .scroll-x { overflow-x: auto; }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-bottom: 1.25rem;
+      }
+
+      th {
+        padding: 0 0.75rem 0.5rem;
+        text-align: left;
+        font-size: 0.72rem;
+        text-transform: uppercase;
+        letter-spacing: 0.06em;
+        color: var(--muted);
+        border-bottom: 1px solid var(--border);
+        white-space: nowrap;
+      }
+
+      td {
+        padding: 0.7rem 0.75rem;
+        border-bottom: 1px solid var(--border);
+        vertical-align: middle;
+      }
+
+      tr.is-current { background: var(--accent-soft); }
+
+      .key-id {
+        font-family: var(--mono);
+        font-size: 0.8rem;
+        word-break: break-all;
+      }
+
+      .badge {
+        display: inline-block;
+        padding: 0.1rem 0.5rem;
+        border-radius: 999px;
+        background: var(--accent);
+        color: var(--accent-text);
+        font-size: 0.72rem;
+        font-weight: 600;
+      }
+
+      /* The id column wraps freely, so the action buttons never have to. */
+      .actions {
+        display: flex;
+        gap: 0.35rem;
+      }
+
+      td:last-child { white-space: nowrap; }
+
+      button {
+        font: inherit;
+        cursor: pointer;
+        white-space: nowrap;
+        padding: 0.4rem 0.75rem;
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        background: var(--bg);
+        color: var(--text);
+      }
+
+      button:hover {
+        border-color: var(--accent);
+        color: var(--accent);
+      }
+
+      button.primary {
+        background: var(--accent);
+        border-color: var(--accent);
+        color: var(--accent-text);
+        font-weight: 600;
+      }
+
+      button.primary:hover {
+        color: var(--accent-text);
+        filter: brightness(1.08);
+      }
+
+      :focus-visible {
+        outline: 2px solid var(--accent);
+        outline-offset: 2px;
+      }
+
+      .field { margin-bottom: 1.5rem; }
+
+      label {
+        display: block;
+        margin-bottom: 0.35rem;
+        font-weight: 600;
+        font-size: 0.9rem;
+      }
+
+      input[type="text"], textarea {
+        width: 100%;
+        padding: 0.6rem 0.7rem;
+        font: inherit;
+        color: var(--text);
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+      }
+
+      textarea {
+        min-height: 8rem;
+        resize: vertical;
+        font-family: var(--mono);
+        font-size: 0.85rem;
+      }
+
+      input[type="text"]:focus, textarea:focus {
+        outline: none;
+        border-color: var(--accent);
+        box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 20%, transparent);
+      }
+
+      .is-invalid { border-color: var(--danger); }
+
+      .help, .error {
+        margin: 0.35rem 0 0;
+        font-size: 0.825rem;
+      }
+
+      .help { color: var(--muted); }
+      .error { color: var(--danger); }
+
+      pre {
+        margin: 0 0 1.25rem;
+        padding: 0.9rem 1rem;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        font-family: var(--mono);
+        font-size: 0.85rem;
+        overflow-x: auto;
+      }
+
+      .empty { color: var(--muted); }
+    </style>
   </head>
   <body>
-  <section class="hero is-primary">
-    <div class="hero-body">
-      <p class="title">
-        NotGitHub Token Scanning
-      </p>
-      <p class="subtitle">
-        Simulate GitHub Token Scanning features for integration purposes
-      </p>
-    </div>
-  </section>
+    <header>
+      <div class="container">
+        <h1>NotGitHub Token Scanning</h1>
+        <p>Simulate GitHub Token Scanning features for integration purposes</p>
+      </div>
+    </header>
 
-  <section class="section">
-    <div class="container is-max-desktop">
-      <h1 class="title">
-        Keys
-      </h1>
-      <table class="table table-hover mb-2">
-        <thead>
-          <tr>
-            <th>#</th>
-            <th class="col-auto">id</th>
-            <th>current</th>
-            <th>action</th>
-          </tr>
-        </thead>
-        <tbody>
-          {% for key in keys %}
-            <tr class="{% if key.is_current %}is-selected{% endif %}">
-              <td>{{ loop.index }}</td>
-              <td><small>{{ key.id }}<small></td>
-              <td>
-                {% if key.is_current %}
-                  <strong>yes</strong>
-                {% else %}
-                  no
-                {% endif %}
-              </td>
-              <td>
-                <form method="post" action="/edit-key/{{ loop.index0 }}">
-                {% if not loop.first %}
-                  <button type="submit" name="action" value="up" class="button"><i class="fas fa-arrow-up"></i></button>
-                {% endif %}
-                {% if not loop.last %}
-                  <button type="submit" name="action" value="down" class="button"><i class="fas fa-arrow-down"></i></button>
-                {% endif %}
-                <button type="submit" name="action" value="delete" class="button"><i class="fas fa-trash"></i></button>
-                {% if not key.is_current %}
-                  <button type="submit" name="action" value="current" class="button"><i class="fas fa-check-square"></i></button>
-                {% endif %}
-                </form>
-              </td>
-            </tr>
-          {% endfor %}
-        </tbody>
-      </table>
-      <form method="post" action="/add-key">
-        <button class="button is-primary">Add key</button>
-      </form>
-    </div>
-  </section>
-
-  <section class="section">
-    <div class="container is-max-desktop">
-      <h1 class="title">
-        Token disclosure report
-      </h1>
-      <form method="post" action="/disclose">
-        <div class="field">
-          <label class="label">Payload</label>
-          <div class="control">
-            <textarea id="payload" name="payload" class="textarea {% if payload.error %}is-danger{% endif %}" placeholder="[{&quot;type&quot;: &quot;token&quot;, &quot;token&quot;: token, &quot;url&quot;: &quot;https://example.com&quot;}]">{{ payload.value }}</textarea>
+    <main>
+      <section>
+        <div class="container">
+          <h2>Keys</h2>
+          <div class="scroll-x">
+            <table>
+              <thead>
+                <tr>
+                  <th>#</th>
+                  <th>id</th>
+                  <th>current</th>
+                  <th>action</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for key in keys %}
+                  <tr {% if key.is_current %}class="is-current"{% endif %}>
+                    <td>{{ loop.index }}</td>
+                    <td class="key-id">{{ key.id }}</td>
+                    <td>
+                      {% if key.is_current %}
+                        <span class="badge">current</span>
+                      {% else %}
+                        <span class="empty">&mdash;</span>
+                      {% endif %}
+                    </td>
+                    <td>
+                      <form method="post" action="/edit-key/{{ loop.index0 }}" class="actions">
+                        {% if not loop.first %}
+                          <button type="submit" name="action" value="up" title="Move up" aria-label="Move up">&uarr;</button>
+                        {% endif %}
+                        {% if not loop.last %}
+                          <button type="submit" name="action" value="down" title="Move down" aria-label="Move down">&darr;</button>
+                        {% endif %}
+                        {% if not key.is_current %}
+                          <button type="submit" name="action" value="current">Make current</button>
+                        {% endif %}
+                        <button type="submit" name="action" value="delete">Delete</button>
+                      </form>
+                    </td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
           </div>
-          <p class="help">Token disclosure payload (JSON)</p>
-          {% if payload.error %}
-            <p class="help is-danger">{{ payload.error }}</p>
-          {% endif %}
-
+          <form method="post" action="/add-key">
+            <button class="primary">Add key</button>
+          </form>
         </div>
+      </section>
 
-        <div class="field">
-          <label class="label">URL</label>
-          <div class="control">
-            <input class="input {% if url.error %}is-danger{% endif %}" name="url" type="text" placeholder="http://somewhere:8080/github" value="{{ url.value }}">
+      <section>
+        <div class="container">
+          <h2>Token disclosure report</h2>
+          <form method="post" action="/disclose">
+            <div class="field">
+              <label for="payload">Payload</label>
+              <textarea id="payload" name="payload"
+                        class="{% if payload.error %}is-invalid{% endif %}"
+                        placeholder="[{&quot;type&quot;: &quot;token&quot;, &quot;token&quot;: token, &quot;url&quot;: &quot;https://example.com&quot;}]"
+                        {% if payload.error %}aria-invalid="true"{% endif %}>{{ payload.value }}</textarea>
+              <p class="help">Token disclosure payload (JSON)</p>
+              {% if payload.error %}
+                <p class="error">{{ payload.error }}</p>
+              {% endif %}
+            </div>
+
+            <div class="field">
+              <label for="url">URL</label>
+              <input id="url" name="url" type="text"
+                     class="{% if url.error %}is-invalid{% endif %}"
+                     placeholder="http://somewhere:8080/github"
+                     value="{{ url.value }}"
+                     {% if url.error %}aria-invalid="true"{% endif %}>
+              <p class="help">URL to call for the token disclosure</p>
+              {% if url.error %}
+                <p class="error">{{ url.error }}</p>
+              {% endif %}
+            </div>
+
+            <button class="primary">Report tokens</button>
+          </form>
+        </div>
+      </section>
+
+      {% if response %}
+        <section>
+          <div class="container">
+            <h2>Response</h2>
+            <h3>Status code</h3>
+            <pre>{{ response.status_code }}</pre>
+            <h3>Body</h3>
+            <pre>{{ response.text }}</pre>
           </div>
-          <p class="help">URL to call for the token disclosure</p>
-          {% if url.error %}
-            <p class="help is-danger">{{ url.error }}</p>
-          {% endif %}
-        </div>
-
-        <button class="button is-large is-primary">Report tokens</button>
-      </form>
-
-    </div>
-  </section>
-
-  {% if response %}
-  <section class="section">
-    <div class="container is-max-desktop">
-      <h1 class="title">
-        Response
-      </h1>
-      <h3>Status code</h3>
-      <pre>{{ response.status_code }}</pre>
-
-      <h3>Response</h3>
-      <pre>{{ response.text }}</pre>
-
-    </div>
-  </section>
-  {% endif %}
-
+        </section>
+      {% endif %}
+    </main>
   </body>
 </html>
