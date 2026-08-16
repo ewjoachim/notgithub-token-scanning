@@ -98,20 +98,19 @@ async def disclose_view(url: str = Form(""), payload: str = Form("")):
 
     state["url"]["value"] = url
     state["payload"]["value"] = payload
-
-    errors = False
+    state["url"]["error"] = False
+    state["payload"]["error"] = False
 
     # Not checking anything on payload to leave all the room for testing edcases
     # (missing or malformed body)
     if not payload:
-        state["payload"]["error"] = "Missing url"
-        errors = True
+        state["payload"]["error"] = "Missing payload"
 
-    if not errors:
+    if not url:
+        state["url"]["error"] = "Missing url"
+
+    if not (state["payload"]["error"] or state["url"]["error"]):
         state["response"] = await disclose(url=url, payload=payload)
-
-    state["url"]["error"] = False
-    state["payload"]["error"] = False
 
     return responses.RedirectResponse("/", status_code=302)
 
