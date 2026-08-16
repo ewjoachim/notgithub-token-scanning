@@ -5,6 +5,7 @@ on:
   push:
     branches:
       - main
+  workflow_dispatch:
 
 concurrency:
   # A publish must run to completion, so only cancel superseded PR runs.
@@ -98,7 +99,7 @@ jobs:
   push_to_registry:
     name: Push Docker image to Docker Hub
     needs: [lint, build]
-    if: github.event_name == 'push'
+    if: github.event_name != 'pull_request'
     runs-on: ubuntu-latest
     environment: docker-publish
     steps:
