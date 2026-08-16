@@ -1,0 +1,22 @@
+[project]
+name = "notgithub-token-scanning"
+version = "0.1.0"
+description = "Add your description here"
+readme = "README.md"
+authors = [
+    { name = "Joachim Jablon", email = "ewjoachim@gmail.com" }
+]
+requires-python = ">=3.14"
+dependencies = [
+    "cryptography>=50.0.0",
+    "fastapi>=0.141.1",
+    "httpx>=0.28.1",
+    "jinja2>=3.1.6",
+    "python-multipart>=0.0.32",
+    "uvicorn>=0.52.1",
+]
+
+# The app is a single main.py at the repo root served by uvicorn, not an
+# installable package, so uv only needs to resolve the dependencies.
+[tool.uv]
+package = false
