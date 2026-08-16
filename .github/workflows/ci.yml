@@ -72,9 +72,11 @@ jobs:
           import time
           import urllib.request
 
+          # No --rm: a container that dies on startup must stick around, or
+          # `docker logs` has nothing left to report and the failure is opaque.
           subprocess.run(
               [
-                  "docker", "run", "--rm", "--detach",
+                  "docker", "run", "--detach",
                   "--publish", "8000:8000",
                   "--name", "smoke-test",
                   "notgithub-token-scanning:smoke-test",
@@ -83,6 +85,13 @@ jobs:
           )
           try:
               for _ in range(30):
+                  alive = subprocess.run(
+                      ["docker", "inspect", "--format", "{{.State.Running}}", "smoke-test"],
+                      capture_output=True,
+                      text=True,
+                  )
+                  if alive.stdout.strip() != "true":
+                      raise SystemExit("Container exited instead of serving")
                   try:
                       with urllib.request.urlopen("http://localhost:8000/") as response:
                           print(f"Home page returned {response.status}")
@@ -91,9 +100,9 @@ jobs:
                       print(f"Not up yet ({exc}), retrying")
                       time.sleep(1)
               else:
-                  subprocess.run(["docker", "logs", "smoke-test"])
                   raise SystemExit("Image never served the home page")
           finally:
+              subprocess.run(["docker", "logs", "smoke-test"])
               subprocess.run(["docker", "rm", "--force", "smoke-test"])
 
   push_to_registry:
