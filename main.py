@@ -78,7 +78,7 @@ async def disclose(url, payload):
                     "GITHUB-PUBLIC-KEY-SIGNATURE": signature,
                     "Content-Type": "application/json",
                 },
-                data=payload,
+                content=payload,
             )
     except httpx.TransportError as exc:
         return {"status_code": "-", "text": str(exc)}
