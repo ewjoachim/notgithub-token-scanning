@@ -90,7 +90,7 @@ async def home_view(request: Request):
     if not state["keys"]:
         create_keypair()
 
-    return templates.TemplateResponse("home.html.j2", {"request": request, **state})
+    return templates.TemplateResponse(request, "home.html.j2", state)
 
 
 @app.post("/disclose")
