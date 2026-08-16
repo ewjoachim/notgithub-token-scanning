@@ -1,0 +1,55 @@
+repos:
+  - repo: builtin
+    hooks:
+      # File names
+      - id: check-case-conflict
+      # File formats
+      - id: check-json
+      - id: check-toml
+      - id: check-yaml
+      # Git shenanigans
+      - id: check-merge-conflict
+      - id: check-added-large-files
+      # Whitespace
+      - id: end-of-file-fixer
+      - id: trailing-whitespace
+      - id: mixed-line-ending
+
+  - repo: local
+    hooks:
+      - id: ruff-check
+        name: ruff check
+        entry: uv run --group dev ruff check --force-exclude --fix --unsafe-fixes --show-fixes
+        language: system
+        types_or: [python, pyi]
+        require_serial: true
+
+      - id: ruff-format
+        name: ruff format
+        entry: uv run --group dev ruff format --force-exclude
+        language: system
+        types_or: [python, pyi]
+        require_serial: true
+
+      - id: uv-lock
+        name: uv-lock
+        entry: env UV_FROZEN=false uv lock
+        language: system
+        files: ^(uv\.lock|pyproject\.toml|uv\.toml)$
+        pass_filenames: false
+
+      - id: basedpyright
+        name: basedpyright
+        entry: uv run --group dev basedpyright
+        language: system
+        types_or: [python, pyi]
+        require_serial: true
+        pass_filenames: false
+
+      - id: zizmor
+        name: zizmor
+        entry: uv run --group dev zizmor --no-progress --fix=all --persona=auditor
+        language: system
+        types: [yaml]
+        files: (\.github/(workflows/.*|dependabot\.ya?ml))|(action\.ya?ml)$
+        require_serial: true
