@@ -4,7 +4,6 @@ import json
 import os
 
 import httpx
-from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.hashes import SHA256
@@ -35,7 +34,7 @@ state: dict = {
 
 
 def create_keypair():
-    private_key = ec.generate_private_key(ec.SECP256R1(), backend=default_backend())
+    private_key = ec.generate_private_key(ec.SECP256R1())
     public_key = private_key.public_key()
     pem_public_key = public_key.public_bytes(
         encoding=serialization.Encoding.PEM,
