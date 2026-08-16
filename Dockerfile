@@ -1,12 +1,26 @@
-FROM python:slim
+FROM ubuntu:26.04@sha256:678c6550cc43645e08669028bc177f50be4e7c5b8cca677067b1914d4afc7a03
+
+COPY --from=ghcr.io/astral-sh/uv:0.12.3@sha256:2d890623d310b57771ce840f0da5eed5fc6d657da05ffaa45d82797b53fa3abc /uv /uvx /bin/
 
 WORKDIR /app/
 
-COPY scripts ./scripts
-COPY requirements.txt ./
-RUN /app/scripts/build
+ENV UV_FROZEN=1 UV_LINK_MODE=copy UV_COMPILE_BYTECODE=1 UV_NO_DEV=1
 
-COPY main.py ./
+RUN useradd --system --create-home app
+
+COPY pyproject.toml uv.lock ./
+
+RUN --mount=type=cache,target=/root/.cache/uv uv sync
+
+ENV PATH=/app/.venv/bin:$PATH
+
 COPY templates ./templates
-CMD ["/app/scripts/serve"]
+COPY main.py ./
+
+USER app
 EXPOSE 8000
+# The base image has no curl, but the venv's interpreter is already on PATH.
+# Checks the key listing rather than /, which creates a keypair as a side effect.
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s \
+    CMD ["python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:8000/meta/public_keys/token_scanning')"]
+CMD ["uvicorn", "main:app", "--host=0.0.0.0"]
