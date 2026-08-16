@@ -4,7 +4,6 @@ import json
 import os
 
 import httpx
-from cryptography.hazmat.backends import default_backend
 from cryptography.hazmat.primitives import serialization
 from cryptography.hazmat.primitives.asymmetric import ec
 from cryptography.hazmat.primitives.hashes import SHA256
@@ -35,7 +34,7 @@ state: dict = {
 
 
 def create_keypair():
-    private_key = ec.generate_private_key(ec.SECP256R1(), backend=default_backend())
+    private_key = ec.generate_private_key(ec.SECP256R1())
     public_key = private_key.public_key()
     pem_public_key = public_key.public_bytes(
         encoding=serialization.Encoding.PEM,
@@ -79,7 +78,7 @@ async def disclose(url, payload):
                     "GITHUB-PUBLIC-KEY-SIGNATURE": signature,
                     "Content-Type": "application/json",
                 },
-                data=payload,
+                content=payload,
             )
     except httpx.TransportError as exc:
         return {"status_code": "-", "text": str(exc)}
@@ -91,7 +90,7 @@ async def home_view(request: Request):
     if not state["keys"]:
         create_keypair()
 
-    return templates.TemplateResponse("home.html.j2", {"request": request, **state})
+    return templates.TemplateResponse(request, "home.html.j2", state)
 
 
 @app.post("/disclose")
@@ -99,20 +98,19 @@ async def disclose_view(url: str = Form(""), payload: str = Form("")):
 
     state["url"]["value"] = url
     state["payload"]["value"] = payload
-
-    errors = False
+    state["url"]["error"] = False
+    state["payload"]["error"] = False
 
     # Not checking anything on payload to leave all the room for testing edcases
     # (missing or malformed body)
     if not payload:
-        state["payload"]["error"] = "Missing url"
-        errors = True
+        state["payload"]["error"] = "Missing payload"
 
-    if not errors:
+    if not url:
+        state["url"]["error"] = "Missing url"
+
+    if not (state["payload"]["error"] or state["url"]["error"]):
         state["response"] = await disclose(url=url, payload=payload)
-
-    state["url"]["error"] = False
-    state["payload"]["error"] = False
 
     return responses.RedirectResponse("/", status_code=302)
 

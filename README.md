@@ -31,7 +31,14 @@ notgithub:
 
 ### Build & run without docker
 
-In a virtual environment, run `scripts/build` and `scripts/serve`
+With [uv](https://docs.astral.sh/uv/) installed:
+
+```console
+$ uv run uvicorn main:app
+```
+
+`uv` creates the virtual environment, fetches Python 3.14 and installs the
+dependencies on its own.
 
 ### Use
 

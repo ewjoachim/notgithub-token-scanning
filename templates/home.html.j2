@@ -4,7 +4,7 @@
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1">
     <title>NotGitHub Token Scanning</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@0.9.1/css/bulma.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bulma@1.0.4/css/bulma.min.css">
 <script src="https://kit.fontawesome.com/33cb266255.js" crossorigin="anonymous"></script>
   </head>
   <body>
@@ -90,7 +90,7 @@
         <div class="field">
           <label class="label">URL</label>
           <div class="control">
-            <input class="input {% if 'url' in errors %}is-danger{% endif %}" name="url" type="text" placeholder="http://somewhere:8080/github" value="{{ url.value }}">
+            <input class="input {% if url.error %}is-danger{% endif %}" name="url" type="text" placeholder="http://somewhere:8080/github" value="{{ url.value }}">
           </div>
           <p class="help">URL to call for the token disclosure</p>
           {% if url.error %}

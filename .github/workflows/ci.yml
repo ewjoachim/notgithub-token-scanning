@@ -1,0 +1,150 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  # A publish must run to completion, so only cancel superseded PR runs.
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  UV_FROZEN: "true"
+
+# Pushing to Docker Hub authenticates with DOCKER_PASSWORD, not GITHUB_TOKEN.
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Lint
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up uv
+        uses: astral-sh/setup-uv@20cfd1bf945f4377ade1205e4dbc17946fc9a30d # v10.0.1
+        with:
+          enable-cache: false
+          python-version: "3.14"
+
+      - name: Install dependencies
+        run: uv sync --all-groups
+
+      - name: Run prek
+        run: uv run --group dev prek run --all-files
+
+  build:
+    name: Build and smoke test the image
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
+
+      # The runner's own platform only, so the image can be loaded and run here.
+      # The layers land in the gha cache, which the publish job reads back.
+      - name: Build image for the smoke test
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        with:
+          context: .
+          platforms: linux/amd64
+          load: true
+          tags: notgithub-token-scanning:smoke-test
+          cache-from: type=gha
+          cache-to: type=gha,mode=max
+
+      - name: Check the image actually serves
+        shell: python
+        run: |
+          import subprocess
+          import time
+          import urllib.request
+
+          # No --rm: a container that dies on startup must stick around, or
+          # `docker logs` has nothing left to report and the failure is opaque.
+          subprocess.run(
+              [
+                  "docker", "run", "--detach",
+                  "--publish", "8000:8000",
+                  "--name", "smoke-test",
+                  "notgithub-token-scanning:smoke-test",
+              ],
+              check=True,
+          )
+          try:
+              for _ in range(30):
+                  alive = subprocess.run(
+                      ["docker", "inspect", "--format", "{{.State.Running}}", "smoke-test"],
+                      capture_output=True,
+                      text=True,
+                  )
+                  if alive.stdout.strip() != "true":
+                      raise SystemExit("Container exited instead of serving")
+                  try:
+                      with urllib.request.urlopen("http://localhost:8000/") as response:
+                          print(f"Home page returned {response.status}")
+                          break
+                  except Exception as exc:
+                      print(f"Not up yet ({exc}), retrying")
+                      time.sleep(1)
+              else:
+                  raise SystemExit("Image never served the home page")
+          finally:
+              subprocess.run(["docker", "logs", "smoke-test"])
+              subprocess.run(["docker", "rm", "--force", "smoke-test"])
+
+  push_to_registry:
+    name: Push Docker image to Docker Hub
+    needs: [lint, build]
+    if: github.event_name != 'pull_request'
+    runs-on: ubuntu-latest
+    environment: docker-publish
+    steps:
+      - name: Check out the repo
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+
+      - name: Set up QEMU
+        uses: docker/setup-qemu-action@96fe6ef7f33517b61c61be40b68a1882f3264fb8 # v4.2.0
+        with:
+          platforms: "arm64"
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v4.2.0
+
+      - name: Log in to Docker Hub
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          username: ewjoachim
+          password: ${{ secrets.DOCKER_PASSWORD }}
+
+      - name: Extract metadata (tags, labels) for Docker
+        id: meta
+        uses: docker/metadata-action@dc802804100637a589fabce1cb79ff13a1411302 # v6.2.0
+        with:
+          images: ewjoachim/notgithub-token-scanning
+          flavor: |
+            latest=true
+
+      - name: Build and push Docker image
+        uses: docker/build-push-action@53b7df96c91f9c12dcc8a07bcb9ccacbed38856a # v7.3.0
+        with:
+          context: .
+          platforms: linux/amd64,linux/arm64
+          push: true
+          tags: ${{ steps.meta.outputs.tags }}
+          labels: ${{ steps.meta.outputs.labels }}
+          cache-from: type=gha
