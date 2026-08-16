@@ -167,4 +167,6 @@ jobs:
           push: true
           tags: ${{ steps.meta.outputs.tags }}
           labels: ${{ steps.meta.outputs.labels }}
-          cache-from: type=gha
+          # No cache-from on purpose: a published image is built only from what
+          # is in the repo, never from layers restored out of the shared cache.
+          # Don't add it back for speed.
