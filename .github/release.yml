@@ -1,0 +1,5 @@
+changelog:
+  exclude:
+    authors:
+      - renovate[bot]
+      - dependabot[bot]
